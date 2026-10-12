@@ -1,0 +1,877 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gallery App</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --accent-gold: #ca8a04;
+            --accent-gold-hover: #a16207;
+            --card-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* --- Loading Screen --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid var(--accent-gold);
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: pulse-logo 2s infinite ease-in-out;
+        }
+
+        .logo-letter {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .welcome-text {
+            display: flex;
+            gap: 4px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .welcome-text span {
+            display: inline-block;
+            animation: bounce-wave 1.5s infinite ease-in-out;
+        }
+
+        .welcome-text span:nth-child(1) { animation-delay: 0.1s; }
+        .welcome-text span:nth-child(2) { animation-delay: 0.2s; }
+        .welcome-text span:nth-child(3) { animation-delay: 0.3s; }
+        .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
+        .welcome-text span:nth-child(5) { animation-delay: 0.5s; }
+        .welcome-text span:nth-child(6) { animation-delay: 0.6s; }
+        .welcome-text span:nth-child(7) { animation-delay: 0.7s; }
+
+        @keyframes bounce-wave {
+            0%, 100% { transform: translateY(0); color: var(--text-primary); }
+            50% { transform: translateY(-10px); color: var(--accent-gold); }
+        }
+
+        .loading-caption {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* --- Main App Container --- */
+        #app {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        #app.visible {
+            opacity: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Gallery Sections --- */
+        .category-section {
+            margin-bottom: 50px;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .gallery-row-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .gallery-row {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 20px 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-gold) var(--border-color);
+        }
+
+        .gallery-row::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .gallery-row::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .gallery-row::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 4px;
+        }
+
+        /* --- Gallery Card Design (Image Only Container) --- */
+        .gallery-card {
+            flex: 0 0 auto;
+            width: 200px;
+            height: 250px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            overflow: hidden;
+            cursor: pointer;
+            scroll-snap-align: center;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease, box-shadow 0.3s ease;
+            transform: scale(0.95);
+        }
+
+        .gallery-card.active {
+            transform: scale(1.05);
+            border-color: var(--accent-gold);
+            box-shadow: 0 15px 30px -5px rgba(202, 138, 4, 0.2);
+            z-index: 2;
+        }
+
+        .card-image-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #e5e7eb;
+            position: relative;
+        }
+
+        .card-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-card:hover .card-image-wrapper img {
+            transform: scale(1.08);
+        }
+
+        /* --- Full-Screen Lightbox Viewer --- */
+        #lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #lightbox.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: scale-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scale-up {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .lightbox-image-container {
+            max-width: 85vw;
+            max-height: 70vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000000;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-image-container img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .lightbox-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 0 5px;
+        }
+
+        .lightbox-title {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .lightbox-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-download {
+            background-color: var(--accent-gold);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-download:hover {
+            background-color: var(--accent-gold-hover);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -45px;
+            right: 0;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: color 0.2s ease;
+        }
+
+        .lightbox-close:hover {
+            color: var(--accent-gold);
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 60px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* --- Responsive Queries --- */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            header p {
+                font-size: 1rem;
+                padding: 0 15px;
+            }
+            .gallery-card {
+                width: 175px;
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-card {
+                width: 150px;
+                height: 190px;
+            }
+            .lightbox-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .lightbox-actions {
+                width: 100%;
+            }
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Loading Screen -->
+    <div id="loading-screen">
+        <div class="logo-container">
+            <span class="logo-letter">S</span>
+        </div>
+        <div class="welcome-text">
+            <span>W</span><span>e</span><span>l</span><span>c</span><span>o</span><span>m</span><span>e</span>
+        </div>
+        <div class="loading-caption">PREPARING YOUR GALLERY</div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app">
+        <header>
+            <h1>3D Gallery App</h1>
+            <p>Explore high-definition curated collections. Tap any image for a full-screen view and download.</p>
+        </header>
+
+        <!-- Category 1 -->
+        <section class="category-section">
+            <h2 class="category-title">Navratri & Durga Puja Special</h2>
+            <div class="gallery-row-container">
+                <div class="gallery-row" id="row-navratri"></div>
+            </div>
+        </section>
+
+        <!-- Category 2 -->
+        <section class="category-section">
+            <h2 class="category-title">Beautiful Flowers & Nature</h2>
+            <div class="gallery-row-container">
+                <div class="gallery-row" id="row-flowers"></div>
+            </div>
+        </section>
+
+        <!-- Category 3 -->
+        <section class="category-section">
+            <h2 class="category-title">Wildlife & Animals</h2>
+            <div class="gallery-row-container">
+                <div class="gallery-row" id="row-wildlife"></div>
+            </div>
+        </section>
+
+        <footer>
+            By Shubham♻️ • Fully Responsive 3D Gallery App
+        </footer>
+    </div>
+
+    <!-- Full-Screen Lightbox Viewer -->
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image Lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" id="lightbox-close" aria-label="Close Lightbox">&times;</button>
+            <div class="lightbox-image-container">
+                <img id="lightbox-img" src="" alt="">
+            </div>
+            <div class="lightbox-info">
+                <span class="lightbox-title" id="lightbox-title"></span>
+                <div class="lightbox-actions">
+                    <a id="lightbox-download" class="btn-download" href="#" target="_blank" rel="noopener noreferrer">
+                        Download Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Centralized Gallery Dataset
+        const galleryData = [
+            // Section 1:High resolution Images(10 items)
+            {
+                id: 'nav-1',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1603228254117-e6a3d70e244d?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1603228254117-e6a3d70e244d?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Magnificent decorated idol of Maa Durga during festival celebrations'
+            },
+            {
+                id: 'nav-2',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1570789210967-2cac24afeb00?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1570789210967-2cac24afeb00?auto=format&fit=crop&w=1600&q=85',
+                alt: 'People performing vibrant traditional Garba Raas dance'
+            },
+            {
+                id: 'nav-3',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1605379399843-5870eea9b74e?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1605379399843-5870eea9b74e?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Traditional oil lamp diya lit for spiritual prayers and ritual aarti'
+            },
+            {
+                id: 'nav-4',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Bright celebratory festival illumination and decorative lights'
+            },
+            {
+                id: 'nav-5',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Divine artistic representation of feminine cosmic energy Shakti'
+            },
+            {
+                id: 'nav-6',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Celebratory festive gathering marking the triumph of good over evil'
+            },
+            {
+                id: 'nav-7',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1599839575945-a9e9af0b3cb1?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1599839575945-a9e9af0b3cb1?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Intricate and colorful traditional floral rangoli art pattern'
+            },
+            {
+                id: 'nav-8',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Grand illuminated festive pandal glowing brightly during night celebrations'
+            },
+            {
+                id: 'nav-9',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1621351183012-e2f9976dd9cf?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1621351183012-e2f9976dd9cf?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Traditional historic temple architecture adorned with festival decor'
+            },
+            {
+                id: 'nav-10',
+                category: 'Navratri & Durga Puja',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Peaceful evening prayer ritual with glowing ceremonial lights'
+            },
+
+            // Section 2: Beautiful Flowers & Nature (10 items)
+            {
+                id: 'fl-1',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Close-up of a vibrant blooming royal red rose flower'
+            },
+            {
+                id: 'fl-2',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Detailed shot of a gorgeous blooming dahlia flower head'
+            },
+            {
+                id: 'fl-3',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Serene sacred lotus flower floating gracefully on water'
+            },
+            {
+                id: 'fl-4',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Bright golden orange marigold flowers used for decorations'
+            },
+            {
+                id: 'fl-5',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1559563458-527698bf5295?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1559563458-527698bf5295?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Delicate soft pink rose petals with natural dew drops'
+            },
+            {
+                id: 'fl-6',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Lush green open field full of blooming wild summer flowers'
+            },
+            {
+                id: 'fl-7',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Exotic tropical purple orchid flower in full bloom'
+            },
+            {
+                id: 'fl-8',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Stunning bright golden sunflower facing towards the warm sunlight'
+            },
+            {
+                id: 'fl-9',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Fragrant pure white jasmine flowers with lush green foliage'
+            },
+            {
+                id: 'fl-10',
+                category: 'Flowers & Nature',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Colorful bed of fresh spring tulips blooming in a garden'
+            },
+
+            // Section 3: Wildlife and Animals (10 items)
+            {
+                id: 'wl-1',
+                category: 'Wildlife & Animals',
+                title: 'Majestic Lion',
+                thumb: 'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Majestic adult male lion resting in its natural savannah habitat'
+            },
+            {
+                id: 'wl-2',
+                category: 'Wildlife & Animals',
+                title: 'Royal Bengal Tiger',
+                thumb: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Powerful Royal Bengal tiger prowling through the dense jungle'
+            },
+            {
+                id: 'wl-3',
+                category: 'Wildlife & Animals',
+                title: 'Giant Panda',
+                thumb: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Cute giant panda peacefully munching on fresh bamboo shoots'
+            },
+            {
+                id: 'wl-4',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Swift and agile leopard perched securely on a tree branch'
+            },
+            {
+                id: 'wl-5',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1484406566174-9da000fda685?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1484406566174-9da000fda685?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Graceful wild deer standing alert in an open woodland clearing'
+            },
+            {
+                id: 'wl-6',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1575550959106-5a7defe28b56?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1575550959106-5a7defe28b56?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Fast cheetah scanning the grassy plains from a lookout'
+            },
+            {
+                id: 'wl-7',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Strong wild brown bear in a natural forest ecosystem'
+            },
+            {
+                id: 'wl-8',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1508873696983-2df5f920ac9c?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1508873696983-2df5f920ac9c?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Wild zebra displaying its striking black and white striped pattern'
+            },
+            {
+                id: 'wl-9',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1529154036614-a60975f5c760?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1529154036614-a60975f5c760?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Australian outback kangaroo standing upright in the wilderness'
+            },
+            {
+                id: 'wl-10',
+                category: 'Wildlife & Animals',
+                title: '',
+                thumb: 'https://images.unsplash.com/photo-1516733968663-dbd43a63d91d?auto=format&fit=crop&w=600&q=80',
+                full: 'https://images.unsplash.com/photo-1516733968663-dbd43a63d91d?auto=format&fit=crop&w=1600&q=85',
+                alt: 'Wise nocturnal owl gazing intently with sharp piercing eyes'
+            }
+        ];
+
+        // Render Gallery Cards (Image Only)
+        function renderGallery() {
+            const navratriRow = document.getElementById('row-navratri');
+            const flowersRow = document.getElementById('row-flowers');
+            const wildlifeRow = document.getElementById('row-wildlife');
+
+            galleryData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.setAttribute('data-id', item.id);
+                card.setAttribute('data-full', item.full);
+                card.setAttribute('data-title', item.title);
+
+                card.innerHTML = `
+                    <div class="card-image-wrapper">
+                        <img src="${item.thumb}" alt="${item.alt}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Unavailable'">
+                    </div>
+                `;
+
+                // Card click opens Lightbox
+                card.addEventListener('click', () => {
+                    openLightbox(item.full, item.title);
+                });
+
+                // Append to respective row
+                if (item.id.startsWith('nav-')) {
+                    navratriRow.appendChild(card);
+                } else if (item.id.startsWith('fl-')) {
+                    flowersRow.appendChild(card);
+                } else if (item.id.startsWith('wl-')) {
+                    wildlifeRow.appendChild(card);
+                }
+            });
+        }
+
+        // Active Card Calculation for 3D Effect
+        function updateActiveCards() {
+            const rows = document.querySelectorAll('.gallery-row');
+            
+            rows.forEach(row => {
+                const cards = row.querySelectorAll('.gallery-card');
+                const rowRect = row.getBoundingClientRect();
+                const rowCenter = rowRect.left + rowRect.width / 2;
+
+                let closestCard = null;
+                let minDistance = Infinity;
+
+                cards.forEach(card => {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCenter = cardRect.left + cardRect.width / 2;
+                    const distance = Math.abs(rowCenter - cardCenter);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestCard = card;
+                    }
+                });
+
+                cards.forEach(card => {
+                    if (card === closestCard) {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        // Lightbox Functionality
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxDownload = document.getElementById('lightbox-download');
+        const lightboxClose = document.getElementById('lightbox-close');
+        let lastFocusedElement = null;
+
+        function openLightbox(url, title) {
+            lastFocusedElement = document.activeElement;
+            lightboxImg.src = url;
+            lightboxImg.alt = title;
+            lightboxTitle.textContent = title;
+            lightboxDownload.href = url;
+            lightboxDownload.setAttribute('download', `${title.toLowerCase().replace(/\s+/g, '-')}.jpg`);
+            
+            lightbox.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            lightboxClose.focus();
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('open');
+            document.body.style.overflow = '';
+            lightboxImg.src = '';
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+            }
+        }
+
+        lightboxClose.addEventListener('click', closeLightbox);
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+                closeLightbox();
+            }
+        });
+
+        // Initialize App & Loading Screen Sequence
+        window.addEventListener('DOMContentLoaded', () => {
+            renderGallery();
+
+            // Setup scroll listeners for 3D active cards
+            const rows = document.querySelectorAll('.gallery-row');
+            rows.forEach(row => {
+                let scrollTimeout;
+                row.addEventListener('scroll', () => {
+                    if (!scrollTimeout) {
+                        scrollTimeout = setTimeout(() => {
+                            updateActiveCards();
+                            scrollTimeout = null;
+                        }, 50);
+                    }
+                }, { passive: true });
+            });
+
+            window.addEventListener('resize', () => {
+                updateActiveCards();
+            });
+
+            // Initial active check after render
+            setTimeout(updateActiveCards, 100);
+
+            // Loading Screen Handler with reliable 2.5s minimum timer & fallback
+            const loadingScreen = document.getElementById('loading-screen');
+            const app = document.getElementById('app');
+            const startTime = Date.now();
+            const minDisplayTime = 2500;
+
+            function hideLoadingScreen() {
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+
+                setTimeout(() => {
+                    loadingScreen.classList.add('fade-out');
+                    app.classList.add('visible');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 600);
+                }, remainingTime);
+            }
+
+            // Hide after window load or max fallback of 4 seconds just in case
+            window.addEventListener('load', hideLoadingScreen);
+            setTimeout(hideLoadingScreen, 4000);
+        });
+    </script>
+</body>
+</html>
