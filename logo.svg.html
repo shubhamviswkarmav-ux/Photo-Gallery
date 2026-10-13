@@ -1,0 +1,48 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Rich Golden Gradients for 3D S Letter -->
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#ca8a04" />
+      <stop offset="100%" stop-color="#854d0e" />
+    </linearGradient>
+    
+    <linearGradient id="goldDark" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#713f12" />
+      <stop offset="100%" stop-color="#a16207" />
+    </linearGradient>
+
+    <!-- Metallic Glow & Depth Filter -->
+    <filter id="luxuryShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <!-- Dark Luxury Background -->
+  <rect width="512" height="512" rx="116" fill="#171410" />
+
+  <!-- Orbital Rings Behind the Letter (Matching Image Reference) -->
+  <g fill="none" stroke="#ca8a04" stroke-opacity="0.45" stroke-width="1.5">
+    <ellipse cx="256" cy="270" rx="180" ry="60" transform="rotate(-10 256 270)" />
+    <ellipse cx="256" cy="270" rx="210" ry="75" transform="rotate(-10 256 270)" stroke-opacity="0.25" />
+  </g>
+
+  <!-- 3D Layered 'S' Letter -->
+  <g filter="url(#luxuryShadow)">
+    <!-- Back/Extrusion Layer for 3D Depth -->
+    <path d="M335 155 C335 125 295 105 251 105 C175 105 135 145 135 195 C135 245 185 265 251 285 C317 305 367 325 367 385 C367 435 315 465 251 465 C175 465 135 425 135 385" 
+          fill="none" 
+          stroke="url(#goldDark)" 
+          stroke-width="58" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+
+    <!-- Front Highlight Layer for Shiny Metallic Finish -->
+    <path d="M330 150 C330 120 290 100 246 100 C170 100 130 140 130 190 C130 240 180 260 246 280 C312 300 362 320 362 380 C362 430 310 460 246 460 C170 460 130 420 130 380" 
+          fill="none" 
+          stroke="url(#goldLight)" 
+          stroke-width="48" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+  </g>
+</svg>
