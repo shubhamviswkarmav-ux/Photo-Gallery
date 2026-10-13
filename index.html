@@ -1,6 +1,8 @@
 <meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="manifest" href="manifest.json">
+
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 
     <meta charset="UTF-8">
@@ -874,13 +876,13 @@
             window.addEventListener('load', hideLoadingScreen);
             setTimeout(hideLoadingScreen, 4000);
         });
+        <script>
         // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
-
     </script>
 </body>
 </html>
